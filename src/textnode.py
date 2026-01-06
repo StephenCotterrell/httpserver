@@ -66,13 +66,17 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
             new_nodes.append(old_node)
         else:
             isvalid = old_node.text.count(delimiter) % 2 == 0
-            starts_with_delimiter = old_node.text[0] == delimiter
+            starts_with_delimiter = (
+                old_node.text != "" and old_node.text[0] == delimiter
+            )
             if not isvalid:
                 raise Exception(
                     "There must be a matching closing delimiter for each delimiter"
                 )
             new_nodes_text = old_node.text.split(delimiter)
             for index, text in enumerate(new_nodes_text):
+                if not text:
+                    continue  # skips empty strings
                 new_node_text_type = (
                     TextType.TEXT
                     if index % 2 == 0 ^ starts_with_delimiter
@@ -167,8 +171,7 @@ def block_to_block_type(block):
     elif all(line[0] == "-" for line in lines):
         return BlockType.UNORDERED_LIST
     elif all(
-        len(line) > 2 and line[0] == str(index + 1) and line[1] == "."
-        for index, line in enumerate(lines)
+        re.match(rf"^{index + 1}\.\s*", line) for index, line in enumerate(lines)
     ):
         return BlockType.ORDERED_LIST
     else:
@@ -205,19 +208,19 @@ def markdown_to_html_node(markdown):
 
 def ordered_list_markdown_to_html_node(block):
     lines = block.split("\n")
-    children = [LeafNode("li", line[2:]) for line in lines]
+    children = [LeafNode("li", re.sub(r"^\d+\.\s*", "", line)) for line in lines]
     return ParentNode("ol", children)
 
 
 def unordered_list_markdown_to_html_node(block):
     lines = block.split("\n")
-    children = [LeafNode("li", line[2:]) for line in lines]
+    children = [LeafNode("li", re.sub(r"^-\s*", "", line)) for line in lines]
     return ParentNode("ul", children)
 
 
 def quote_markdown_to_html_node(block):
     lines = block.split("\n")
-    children = [LeafNode("p", line[2:]) for line in lines]
+    children = [LeafNode("p", re.sub(r"^>\s*", "", line)) for line in lines]
     return ParentNode("blockquote", children)
 
 
