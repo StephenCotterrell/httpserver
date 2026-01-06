@@ -90,6 +90,32 @@ class TestTextNode(unittest.TestCase):
             ],
         )
 
+    def test_split_nodes_delimiter_skips_empty_nodes(self):
+        node = TextNode("**bold**", TextType.TEXT)
+        split_nodes = split_nodes_delimiter([node], "**", TextType.BOLD)
+        self.assertEqual(
+            split_nodes,
+            [
+                TextNode("bold", TextType.BOLD, None),
+            ],
+        )
+
+    def test_split_nodes_delimiter_skips_empty_middle(self):
+        node = TextNode("**bold****after**", TextType.TEXT)
+        split_nodes = split_nodes_delimiter([node], "**", TextType.BOLD)
+        self.assertEqual(
+            split_nodes,
+            [
+                TextNode("bold", TextType.BOLD, None),
+                TextNode("after", TextType.BOLD, None),
+            ],
+        )
+
+    def test_split_nodes_delimiter_raises_on_unmatched(self):
+        node = TextNode("This is **bold text", TextType.TEXT)
+        with self.assertRaises(Exception):
+            split_nodes_delimiter([node], "**", TextType.BOLD)
+
     def test_extract_markdown_images(self):
         text = "This is text with a ![rick roll](https://i.imgur.com/aKaOqIh.gif) and ![obi wan](https://i.imgur.com/fJRm4Vk.jpeg)"
         matches = extract_markdown_images(text)
@@ -328,6 +354,51 @@ the **same** even with inline stuff
             "<div><ul><li>this is an unordered list</li><li>this is another line in the unordered list</li></ul></div>",
         )
 
+    def test_ordered_list_block(self):
+        md = """
+1. first item
+2. second item
+"""
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            "<div><ol><li>first item</li><li>second item</li></ol></div>",
+        )
+
+    def test_ordered_list_block_with_double_digits(self):
+        md = """
+1. item 1
+2. item 2
+3. item 3
+4. item 4
+5. item 5
+6. item 6
+7. item 7
+8. item 8
+9. item 9
+10. item 10
+"""
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            "<div><ol><li>item 1</li><li>item 2</li><li>item 3</li><li>item 4</li><li>item 5</li><li>item 6</li><li>item 7</li><li>item 8</li><li>item 9</li><li>item 10</li></ol></div>",
+        )
+
+    def test_ordered_list_block_with_mixed_spacing(self):
+        md = """
+1.item 1
+2.  item 2
+3.	item 3
+"""
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            "<div><ol><li>item 1</li><li>item 2</li><li>item 3</li></ol></div>",
+        )
+
     def test_heading_block(self):
         md = """
 # Heading 1
@@ -344,6 +415,14 @@ This is just a normal paragraph under the heading
             html,
             "<div><h1>Heading 1</h1><p>This is just a normal paragraph under the heading</p><h2>Heading 2</h2><h3>Heading 3</h3></div>",
         )
+
+    def test_heading_with_inline_formatting(self):
+        md = """
+# **Bold** Heading
+"""
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(html, "<div><h1><b>Bold</b> Heading</h1></div>")
 
 
 if __name__ == "__main__":
