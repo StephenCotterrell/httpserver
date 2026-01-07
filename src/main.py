@@ -41,6 +41,16 @@ def copy_filetree(source, destination, *, is_root=False):
         copy_filetree(new_source, new_dest)
 
 
+def extract_title(markdown):
+    block = markdown.lstrip().split("\n\n")[0]
+    first = block.split(" ", maxsplit=1)[0].rstrip()
+    text = block.split(" ", maxsplit=1)[1].strip()
+    tag = f"h{len(first)}"
+    if tag != "h1":
+        raise Exception("first line should be heading, not subheading")
+    return text
+
+
 def main():
     source = "static"
     destination = "public"

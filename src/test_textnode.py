@@ -6,7 +6,6 @@ from textnode import (
     BlockType,
     block_to_block_type,
     extract_markdown_links,
-    extract_title,
     split_nodes_delimiter,
     text_node_to_html_node,
     extract_markdown_images,
@@ -16,6 +15,8 @@ from textnode import (
     markdown_to_blocks,
     markdown_to_html_node,
 )
+
+from main import extract_title
 
 
 class TestTextNode(unittest.TestCase):

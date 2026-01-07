@@ -247,13 +247,3 @@ def text_to_children(text):
     text_nodes = text_to_text_nodes(text)
     html_nodes = [text_node_to_html_node(text_node) for text_node in text_nodes]
     return html_nodes
-
-
-def extract_title(markdown):
-    block = markdown.lstrip().split("\n\n")[0]
-    first = block.split(" ", maxsplit=1)[0].rstrip()
-    text = block.split(" ", maxsplit=1)[1].strip()
-    tag = f"h{len(first)}"
-    if tag != "h1":
-        raise Exception("first line should be heading, not subheading")
-    return text
