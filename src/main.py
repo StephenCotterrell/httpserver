@@ -1,6 +1,8 @@
 import os
 import shutil
 
+from textnode import markdown_to_html_node
+
 
 # source is either going to be a file or a directory. if it's a file, call shutils to move the file. if it's a directory, call the function on it again with a modified filepath for both the source and the destination.
 def copy_filetree(source, destination, *, is_root=False):
@@ -51,10 +53,36 @@ def extract_title(markdown):
     return text
 
 
+def generate_page(from_path, template_path, dest_path):
+    print(f"Generating page from {from_path} to {dest_path} using {template_path}")
+    with open(from_path, "r") as f:
+        from_file = f.read()
+        f.close()
+
+    with open(template_path, "r") as f:
+        template = f.read()
+        f.close()
+
+    html = markdown_to_html_node(from_file).to_html()
+    title = extract_title(from_file)
+    html = template.replace("{{ Title }}", title).replace("{{ Content }}", html)
+
+    with open(dest_path, "w") as f:
+        if not os.path.exists(os.path.dirname(dest_path)):
+            os.makedirs(os.path.dirname(dest_path))
+
+        f.write(html)
+        f.close()
+
+
 def main():
-    source = "static"
-    destination = "public"
-    copy_filetree(source, destination, is_root=True)
+    # source = "static"
+    # destination = "public"
+    # copy_filetree(source, destination, is_root=True)
+    from_path = "content/index.md"
+    dest_path = "public/index.html"
+    template_path = "template.html"
+    generate_page(from_path, template_path, dest_path)
 
 
 if __name__ == "__main__":
