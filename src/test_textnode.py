@@ -6,6 +6,7 @@ from textnode import (
     BlockType,
     block_to_block_type,
     extract_markdown_links,
+    extract_title,
     split_nodes_delimiter,
     text_node_to_html_node,
     extract_markdown_images,
@@ -423,6 +424,20 @@ This is just a normal paragraph under the heading
         node = markdown_to_html_node(md)
         html = node.to_html()
         self.assertEqual(html, "<div><h1><b>Bold</b> Heading</h1></div>")
+
+    def test_extract_title(self):
+        md = """
+# Heading
+"""
+        heading = extract_title(md)
+        self.assertEqual(heading, "Heading")
+
+    def test_extract_title_strips_trailing_whitespace(self):
+        md = """
+# Heading   
+"""
+        heading = extract_title(md)
+        self.assertEqual(heading, "Heading")
 
 
 if __name__ == "__main__":
