@@ -206,20 +206,27 @@ def markdown_to_html_node(markdown):
 
 def ordered_list_markdown_to_html_node(block):
     lines = block.split("\n")
-    children = [LeafNode("li", re.sub(r"^\d+\.\s*", "", line)) for line in lines]
+    children = []
+    for line in lines:
+        item_text = re.sub(r"^\d+\.\s*", "", line)
+        children.append(ParentNode("li", text_to_children(item_text)))
     return ParentNode("ol", children)
 
 
 def unordered_list_markdown_to_html_node(block):
     lines = block.split("\n")
-    children = [LeafNode("li", re.sub(r"^-\s*", "", line)) for line in lines]
+    children = []
+    for line in lines:
+        item_text = re.sub(r"^-\s*", "", line)
+        children.append(ParentNode("li", text_to_children(item_text)))
     return ParentNode("ul", children)
 
 
 def quote_markdown_to_html_node(block):
     lines = block.split("\n")
-    children = [LeafNode("p", re.sub(r"^>\s*", "", line)) for line in lines]
-    return ParentNode("blockquote", children)
+    stripped = [re.sub(r"^>\s*", "", line) for line in lines]
+    item_text = " ".join(stripped)
+    return ParentNode("blockquote", text_to_children(item_text))
 
 
 def code_markdown_to_html_node(block):
