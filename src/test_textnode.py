@@ -433,6 +433,43 @@ This is just a normal paragraph under the heading
         heading = extract_title(md)
         self.assertEqual(heading, "Heading")
 
+    def test_extract_title_ignores_leading_blank_lines(self):
+        md = """
+
+
+# Heading
+"""
+        heading = extract_title(md)
+        self.assertEqual(heading, "Heading")
+
+    def test_extract_title_rejects_non_h1_first_line(self):
+        md = """
+## Subheading
+"""
+        with self.assertRaises(Exception):
+            extract_title(md)
+
+    def test_extract_title_rejects_non_heading_first_line(self):
+        md = """
+This is not a heading
+"""
+        with self.assertRaises(Exception):
+            extract_title(md)
+
+    def test_extract_title_rejects_empty_markdown(self):
+        md = """
+
+"""
+        with self.assertRaises(Exception):
+            extract_title(md)
+
+    def test_extract_title_strips_heading_text(self):
+        md = """
+#   Heading with spaces   
+"""
+        heading = extract_title(md)
+        self.assertEqual(heading, "Heading with spaces")
+
     def test_extract_title_strips_trailing_whitespace(self):
         md = """
 # Heading   
