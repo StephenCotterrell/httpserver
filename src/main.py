@@ -1,5 +1,6 @@
 import os
 import shutil
+import sys
 
 from textnode import markdown_to_html_node
 
@@ -55,7 +56,9 @@ def extract_title(markdown):
     return text
 
 
-def generate_pages_recursive(from_path, template_path, dest_path, *, is_root=False):
+def generate_pages_recursive(
+    from_path, template_path, dest_path, basepath, *, is_root=False
+):
     abs_from_path = os.path.abspath(from_path)
     abs_dest_path = os.path.abspath(dest_path)
     abs_template_path = os.path.abspath(template_path)
@@ -80,7 +83,7 @@ def generate_pages_recursive(from_path, template_path, dest_path, *, is_root=Fal
         dest_root, dest_ext = os.path.splitext(abs_dest_path)
         if dest_ext == ".md":
             abs_dest_path = dest_root + ".html"
-        generate_page(abs_from_path, abs_template_path, abs_dest_path)
+        generate_page(abs_from_path, abs_template_path, abs_dest_path, basepath)
         return
 
     if is_root:
@@ -94,10 +97,12 @@ def generate_pages_recursive(from_path, template_path, dest_path, *, is_root=Fal
     for name in os.listdir(from_path):
         new_from_path = os.path.join(from_path, name)
         new_dest_path = os.path.join(dest_path, name)
-        generate_pages_recursive(new_from_path, abs_template_path, new_dest_path)
+        generate_pages_recursive(
+            new_from_path, abs_template_path, new_dest_path, basepath
+        )
 
 
-def generate_page(from_path, template_path, dest_path):
+def generate_page(from_path, template_path, dest_path, basepath):
     print(f"Generating page from {from_path} to {dest_path} using {template_path}")
     with open(from_path, "r") as f:
         from_file = f.read()
@@ -110,6 +115,9 @@ def generate_page(from_path, template_path, dest_path):
     html = markdown_to_html_node(from_file).to_html()
     title = extract_title(from_file)
     html = template.replace("{{ Title }}", title).replace("{{ Content }}", html)
+    html = html.replace('href="/', f'href="/{basepath}').replace(
+        'src="/', f'src="/{basepath}'
+    )
 
     with open(dest_path, "w") as f:
         if not os.path.exists(os.path.dirname(dest_path)):
@@ -119,15 +127,16 @@ def generate_page(from_path, template_path, dest_path):
         f.close()
 
 
-def main():
+def main(argv):
+    basepath = sys.argv[0] if len(argv) > 0 else "/"
     source = "static"
-    destination = "public"
+    destination = "docs"
     copy_filetree(source, destination, is_root=True)
     from_path = "content"
-    dest_path = "public"
+    dest_path = "docs"
     template_path = "template.html"
-    generate_pages_recursive(from_path, template_path, dest_path)
+    generate_pages_recursive(from_path, template_path, dest_path, basepath)
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1:])
