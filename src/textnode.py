@@ -66,9 +66,6 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
             new_nodes.append(old_node)
         else:
             isvalid = old_node.text.count(delimiter) % 2 == 0
-            starts_with_delimiter = (
-                old_node.text != "" and old_node.text[0] == delimiter
-            )
             if not isvalid:
                 raise Exception(
                     "There must be a matching closing delimiter for each delimiter"
@@ -77,11 +74,7 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
             for index, text in enumerate(new_nodes_text):
                 if not text:
                     continue  # skips empty strings
-                new_node_text_type = (
-                    TextType.TEXT
-                    if index % 2 == 0 ^ starts_with_delimiter
-                    else text_type
-                )
+                new_node_text_type = text_type if index % 2 == 1 else TextType.TEXT
                 node = TextNode(text, new_node_text_type)
                 new_nodes.append(node)
     return new_nodes
