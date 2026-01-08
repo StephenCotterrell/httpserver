@@ -128,7 +128,8 @@ def generate_page(from_path, template_path, dest_path, basepath):
 
 
 def main(argv):
-    basepath = sys.argv[0] if len(argv) > 0 else "/"
+    basepath = sys.argv[1] if len(argv) > 0 else "/"
+    print(basepath)
     source = "static"
     destination = "docs"
     copy_filetree(source, destination, is_root=True)
