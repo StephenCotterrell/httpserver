@@ -1,1 +1,1 @@
-python3 src/main.py "/httpsserver/"
+python3 src/main.py "httpsserver/"
