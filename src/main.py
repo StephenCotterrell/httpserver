@@ -20,6 +20,8 @@ def copy_filetree(source, destination, *, is_root=False):
     # Safety: destination must not *contain* source (would recurse into itself)
     if source_abs.startswith(dest_abs + os.sep):
         raise ValueError("destination may not be an ancestor of source")
+    if dest_abs.startswith(source_abs + os.sep):
+        raise ValueError("destination may not be inside source")
 
     if os.path.isfile(source_abs):
         parent = os.path.dirname(dest_abs)
@@ -53,6 +55,48 @@ def extract_title(markdown):
     return text
 
 
+def generate_pages_recursive(from_path, template_path, dest_path, *, is_root=False):
+    abs_from_path = os.path.abspath(from_path)
+    abs_dest_path = os.path.abspath(dest_path)
+    abs_template_path = os.path.abspath(template_path)
+    cwd = os.path.abspath(os.curdir)
+
+    # Safety: Both must be inside cwd
+    if not abs_from_path.startswith(cwd + os.sep):
+        raise ValueError(f"source outside project: {abs_from_path}")
+    if not abs_dest_path.startswith(cwd + os.sep):
+        raise ValueError(f"source outside project: {abs_dest_path}")
+
+    # Safety: destination must not *contain* source (would recurse into itself)
+    if abs_from_path.startswith(abs_dest_path + os.sep):
+        raise ValueError("destination may not be an ancestor of source")
+    if abs_dest_path.startswith(abs_from_path + os.sep):
+        raise ValueError("destination may not be inside source")
+
+    if os.path.isfile(abs_from_path):
+        parent = os.path.dirname(abs_dest_path)
+        if parent and not os.path.exists(parent):
+            os.makedirs(parent, exist_ok=True)
+        dest_root, dest_ext = os.path.splitext(abs_dest_path)
+        if dest_ext == ".md":
+            abs_dest_path = dest_root + ".html"
+        generate_page(abs_from_path, abs_template_path, abs_dest_path)
+        return
+
+    if is_root:
+        if os.path.exists(dest_path):
+            shutil.rmtree(dest_path)
+        os.mkdir(dest_path)
+    else:
+        if not os.path.exists(dest_path):
+            os.mkdir(dest_path)
+
+    for name in os.listdir(from_path):
+        new_from_path = os.path.join(from_path, name)
+        new_dest_path = os.path.join(dest_path, name)
+        generate_pages_recursive(new_from_path, abs_template_path, new_dest_path)
+
+
 def generate_page(from_path, template_path, dest_path):
     print(f"Generating page from {from_path} to {dest_path} using {template_path}")
     with open(from_path, "r") as f:
@@ -76,13 +120,13 @@ def generate_page(from_path, template_path, dest_path):
 
 
 def main():
-    # source = "static"
-    # destination = "public"
-    # copy_filetree(source, destination, is_root=True)
-    from_path = "content/index.md"
-    dest_path = "public/index.html"
+    source = "static"
+    destination = "public"
+    copy_filetree(source, destination, is_root=True)
+    from_path = "content"
+    dest_path = "public"
     template_path = "template.html"
-    generate_page(from_path, template_path, dest_path)
+    generate_pages_recursive(from_path, template_path, dest_path)
 
 
 if __name__ == "__main__":
